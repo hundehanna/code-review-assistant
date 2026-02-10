@@ -17,38 +17,34 @@ from code_review_assistant.utils.test_runner import TestRunner
 # Load environment variables from .env file
 load_dotenv()
 
-app = typer.Typer(
-    name="code-review",
-    help="AI-powered Python code review assistant",
-    add_completion=False,
-)
 console = Console()
 
 
-@app.command()
-def review(
-    path: Path = typer.Argument(
-        ...,
-        help="Path to Python file or directory to review",
-        exists=True,
-    ),
-    run_tests: bool = typer.Option(
-        True,
-        "--tests/--no-tests",
-        help="Run tests as part of the review",
+def main(
+    path: str = typer.Argument(..., help="Path to Python file or directory to review"),
+    no_tests: bool = typer.Option(
+        False,
+        "--no-tests",
+        help="Skip running tests as part of the review",
     ),
     use_ai: bool = typer.Option(
         False,
-        "--ai/--no-ai",
+        "--ai",
         help="Use AI-powered review (requires OpenAI API key)",
     ),
     api_key: Optional[str] = typer.Option(
         None,
-        "--api-key",
         help="OpenAI API key (or set OPENAI_API_KEY environment variable)",
     ),
 ) -> None:
     """Review Python code for issues and provide feedback."""
+    # Convert string path to Path object
+    path_obj = Path(path)
+    
+    if not path_obj.exists():
+        console.print(f"[red]Error:[/red] Path '{path}' does not exist")
+        raise typer.Exit(1)
+    
     console.print(
         Panel.fit(
             "[bold blue]Code Review Assistant[/bold blue]\n"
@@ -63,10 +59,10 @@ def review(
     console.print("\n[bold cyan]Step 1:[/bold cyan] Running AST analysis...")
     analyzer = ASTAnalyzer()
     
-    if path.is_file():
-        result.issues.extend(analyzer.analyze_file(path))
+    if path_obj.is_file():
+        result.issues.extend(analyzer.analyze_file(path_obj))
     else:
-        result.issues.extend(analyzer.analyze_directory(path))
+        result.issues.extend(analyzer.analyze_directory(path_obj))
     
     console.print(f"  Found {len(result.issues)} issues from AST analysis")
     
@@ -76,8 +72,8 @@ def review(
         try:
             ai_reviewer = AIReviewer(api_key=api_key or os.getenv("OPENAI_API_KEY"))
             
-            if path.is_file():
-                ai_issues = ai_reviewer.review_code(path)
+            if path_obj.is_file():
+                ai_issues = ai_reviewer.review_code(path_obj)
                 result.issues.extend(ai_issues)
                 console.print(f"  Found {len(ai_issues)} additional issues from AI review")
             else:
@@ -88,9 +84,9 @@ def review(
             console.print(f"  [red]Error during AI review:[/red] {e}")
     
     # Step 3: Run Tests
-    if run_tests:
+    if not no_tests:
         console.print("\n[bold cyan]Step 3:[/bold cyan] Running tests...")
-        project_path = path if path.is_dir() else path.parent
+        project_path = path_obj if path_obj.is_dir() else path_obj.parent
         test_runner = TestRunner(project_path)
         result.test_result = test_runner.run_tests()
         
@@ -189,6 +185,11 @@ def _display_results(result: ReviewResult) -> None:
         console.print("[green]✓ No issues found! Code looks good.[/green]")
     
     console.print()
+
+
+# Create the Typer app
+app = typer.Typer(add_completion=False)
+app.command()(main)
 
 
 if __name__ == "__main__":
