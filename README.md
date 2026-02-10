@@ -138,6 +138,14 @@ Create a `.env` file in the project root to set environment variables:
 OPENAI_API_KEY=your-api-key-here
 ```
 
+## Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - 30-second demo to get started
+- **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Detailed examples with real output
+- **[REAL_REPO_EXAMPLE.md](REAL_REPO_EXAMPLE.md)** - How to use on your repositories
+- **[FEATURES.md](FEATURES.md)** - Complete feature list
+- **[demo.py](demo.py)** - Runnable demo file you can test
+
 ## License
 
 See LICENSE file for details.
