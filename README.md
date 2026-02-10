@@ -38,7 +38,9 @@ export OPENAI_API_KEY="your-api-key-here"
 
 ## Usage
 
-### Basic usage (AST analysis only)
+> **📚 For detailed examples and real-world usage, see [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)**
+
+### Quick Start
 
 Review a single Python file:
 ```bash
