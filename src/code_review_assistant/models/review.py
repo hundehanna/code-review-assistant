@@ -42,11 +42,11 @@ class ReviewResult:
     issues: List[CodeIssue] = field(default_factory=list)
     test_result: Optional[TestResult] = None
     summary: str = ""
-    
+
     def has_errors(self) -> bool:
         """Check if there are any error-level issues."""
         return any(issue.severity == Severity.ERROR for issue in self.issues)
-    
+
     def has_warnings(self) -> bool:
         """Check if there are any warning-level issues."""
         return any(issue.severity == Severity.WARNING for issue in self.issues)

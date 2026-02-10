@@ -40,11 +40,11 @@ def main(
     """Review Python code for issues and provide feedback."""
     # Convert string path to Path object
     path_obj = Path(path)
-    
+
     if not path_obj.exists():
         console.print(f"[red]Error:[/red] Path '{path}' does not exist")
         raise typer.Exit(1)
-    
+
     console.print(
         Panel.fit(
             "[bold blue]Code Review Assistant[/bold blue]\n"
@@ -52,26 +52,26 @@ def main(
             border_style="blue",
         )
     )
-    
+
     result = ReviewResult()
-    
+
     # Step 1: AST Analysis
     console.print("\n[bold cyan]Step 1:[/bold cyan] Running AST analysis...")
     analyzer = ASTAnalyzer()
-    
+
     if path_obj.is_file():
         result.issues.extend(analyzer.analyze_file(path_obj))
     else:
         result.issues.extend(analyzer.analyze_directory(path_obj))
-    
+
     console.print(f"  Found {len(result.issues)} issues from AST analysis")
-    
+
     # Step 2: AI Review (optional)
     if use_ai:
         console.print("\n[bold cyan]Step 2:[/bold cyan] Running AI-powered review...")
         try:
             ai_reviewer = AIReviewer(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-            
+
             if path_obj.is_file():
                 ai_issues = ai_reviewer.review_code(path_obj)
                 result.issues.extend(ai_issues)
@@ -82,18 +82,16 @@ def main(
             console.print(f"  [red]Error:[/red] {e}")
         except Exception as e:
             console.print(f"  [red]Error during AI review:[/red] {e}")
-    
+
     # Step 3: Run Tests
     if not no_tests:
         console.print("\n[bold cyan]Step 3:[/bold cyan] Running tests...")
         project_path = path_obj if path_obj.is_dir() else path_obj.parent
         test_runner = TestRunner(project_path)
         result.test_result = test_runner.run_tests()
-        
+
         if result.test_result.passed:
-            console.print(
-                f"  [green]✓[/green] All {result.test_result.passed_tests} tests passed"
-            )
+            console.print(f"  [green]✓[/green] All {result.test_result.passed_tests} tests passed")
         elif result.test_result.total_tests == 0:
             console.print("  [yellow]No tests found or pytest not available[/yellow]")
         else:
@@ -101,7 +99,7 @@ def main(
                 f"  [red]✗[/red] {result.test_result.failed_tests} of "
                 f"{result.test_result.total_tests} tests failed"
             )
-    
+
     # Generate AI summary if AI is enabled
     if use_ai and result.issues:
         try:
@@ -109,34 +107,36 @@ def main(
             result.summary = ai_reviewer.generate_summary(result)
         except Exception:
             pass
-    
+
     # Display Results
     _display_results(result)
 
 
 def _display_results(result: ReviewResult) -> None:
     """Display review results in a formatted table."""
-    console.print("\n" + "="*80)
+    console.print("\n" + "=" * 80)
     console.print("[bold]Review Results[/bold]")
-    console.print("="*80 + "\n")
-    
+    console.print("=" * 80 + "\n")
+
     if result.summary:
         console.print(Panel(result.summary, title="Summary", border_style="blue"))
         console.print()
-    
+
     # Test Results
     if result.test_result:
         test_style = "green" if result.test_result.passed else "red"
         test_status = "PASSED" if result.test_result.passed else "FAILED"
-        
+
         if result.test_result.total_tests > 0:
             console.print(
                 f"[bold]Tests:[/bold] [{test_style}]{test_status}[/{test_style}] "
                 f"({result.test_result.passed_tests}/{result.test_result.total_tests} passed)\n"
             )
         elif result.test_result.error_message:
-            console.print(f"[bold]Tests:[/bold] [yellow]{result.test_result.error_message}[/yellow]\n")
-    
+            console.print(
+                f"[bold]Tests:[/bold] [yellow]{result.test_result.error_message}[/yellow]\n"
+            )
+
     # Issues Table
     if result.issues:
         table = Table(title=f"Issues Found ({len(result.issues)} total)", show_header=True)
@@ -144,37 +144,37 @@ def _display_results(result: ReviewResult) -> None:
         table.add_column("Line", justify="right", style="magenta")
         table.add_column("Severity", justify="center")
         table.add_column("Message", no_wrap=False)
-        
+
         # Sort by severity (errors first, then warnings, then info)
         severity_order = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
         sorted_issues = sorted(result.issues, key=lambda x: severity_order[x.severity])
-        
+
         for issue in sorted_issues:
             severity_style = {
                 Severity.ERROR: "[red]ERROR[/red]",
                 Severity.WARNING: "[yellow]WARNING[/yellow]",
                 Severity.INFO: "[blue]INFO[/blue]",
             }
-            
+
             message = issue.message
             if issue.suggestion:
                 message += f"\n[dim]→ {issue.suggestion}[/dim]"
-            
+
             table.add_row(
                 Path(issue.file_path).name,
                 str(issue.line_number),
                 severity_style[issue.severity],
                 message,
             )
-        
+
         console.print(table)
         console.print()
-        
+
         # Summary counts
         errors = sum(1 for i in result.issues if i.severity == Severity.ERROR)
         warnings = sum(1 for i in result.issues if i.severity == Severity.WARNING)
         infos = sum(1 for i in result.issues if i.severity == Severity.INFO)
-        
+
         console.print(
             f"[bold]Summary:[/bold] "
             f"[red]{errors} errors[/red], "
@@ -183,7 +183,7 @@ def _display_results(result: ReviewResult) -> None:
         )
     else:
         console.print("[green]✓ No issues found! Code looks good.[/green]")
-    
+
     console.print()
 
 

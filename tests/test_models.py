@@ -1,5 +1,4 @@
 """Tests for review models."""
-import pytest
 
 from code_review_assistant.models.review import CodeIssue, ReviewResult, Severity, TestResult
 
@@ -18,7 +17,7 @@ def test_code_issue_creation() -> None:
         line_number=10,
         severity=Severity.ERROR,
         message="Test error",
-        suggestion="Fix it"
+        suggestion="Fix it",
     )
     assert issue.file_path == "test.py"
     assert issue.line_number == 10
@@ -30,10 +29,7 @@ def test_code_issue_creation() -> None:
 def test_code_issue_without_suggestion() -> None:
     """Test CodeIssue creation without suggestion."""
     issue = CodeIssue(
-        file_path="test.py",
-        line_number=10,
-        severity=Severity.WARNING,
-        message="Test warning"
+        file_path="test.py", line_number=10, severity=Severity.WARNING, message="Test warning"
     )
     assert issue.suggestion is None
 
@@ -41,11 +37,7 @@ def test_code_issue_without_suggestion() -> None:
 def test_test_result_passed() -> None:
     """Test TestResult for passing tests."""
     result = TestResult(
-        passed=True,
-        total_tests=5,
-        passed_tests=5,
-        failed_tests=0,
-        output="All tests passed"
+        passed=True, total_tests=5, passed_tests=5, failed_tests=0, output="All tests passed"
     )
     assert result.passed is True
     assert result.total_tests == 5
@@ -62,7 +54,7 @@ def test_test_result_failed() -> None:
         passed_tests=3,
         failed_tests=2,
         error_message="Some tests failed",
-        output="Test output"
+        output="Test output",
     )
     assert result.passed is False
     assert result.failed_tests == 2
@@ -81,21 +73,15 @@ def test_review_result_has_errors() -> None:
     """Test has_errors method."""
     result = ReviewResult()
     assert result.has_errors() is False
-    
-    result.issues.append(CodeIssue(
-        file_path="test.py",
-        line_number=1,
-        severity=Severity.WARNING,
-        message="Warning"
-    ))
+
+    result.issues.append(
+        CodeIssue(file_path="test.py", line_number=1, severity=Severity.WARNING, message="Warning")
+    )
     assert result.has_errors() is False
-    
-    result.issues.append(CodeIssue(
-        file_path="test.py",
-        line_number=2,
-        severity=Severity.ERROR,
-        message="Error"
-    ))
+
+    result.issues.append(
+        CodeIssue(file_path="test.py", line_number=2, severity=Severity.ERROR, message="Error")
+    )
     assert result.has_errors() is True
 
 
@@ -103,19 +89,13 @@ def test_review_result_has_warnings() -> None:
     """Test has_warnings method."""
     result = ReviewResult()
     assert result.has_warnings() is False
-    
-    result.issues.append(CodeIssue(
-        file_path="test.py",
-        line_number=1,
-        severity=Severity.INFO,
-        message="Info"
-    ))
+
+    result.issues.append(
+        CodeIssue(file_path="test.py", line_number=1, severity=Severity.INFO, message="Info")
+    )
     assert result.has_warnings() is False
-    
-    result.issues.append(CodeIssue(
-        file_path="test.py",
-        line_number=2,
-        severity=Severity.WARNING,
-        message="Warning"
-    ))
+
+    result.issues.append(
+        CodeIssue(file_path="test.py", line_number=2, severity=Severity.WARNING, message="Warning")
+    )
     assert result.has_warnings() is True
